@@ -2,7 +2,7 @@ import webpackConfig from '../webpack.config.babel'
 
 export default function (config) {
   config.set({
-    browsers: process.env.TRAVIS ? [ 'ChromeTravis' ] : [ 'Chrome' ],
+    browsers: process.env.TRAVIS ? [ 'ChromeHeadless' ] : [ 'Chrome' ],
     singleRun: true,
     frameworks: [ 'mocha', 'chai' ],
     files: [
@@ -25,12 +25,6 @@ export default function (config) {
       }
     },
     browserNoActivityTimeout: 60000,
-    customLaunchers: {
-      ChromeTravis: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
-      }
-    },
     coverageReporter: {
       dir: 'coverage',
       reporters: [
