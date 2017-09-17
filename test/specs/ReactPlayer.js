@@ -34,7 +34,7 @@ const TEST_URLS = [
   {
     name: 'Streamable',
     url: 'https://streamable.com/moo',
-    skip: true
+    only: true
   },
   {
     name: 'Vidme',
@@ -88,7 +88,7 @@ describe('ReactPlayer', () => {
   })
 
   for (let test of TEST_URLS) {
-    const desc = test.skip ? describe.skip : describe
+    const desc = test.skip ? describe.skip : (test.only ? describe.only : describe)
     desc(test.name, () => {
       it('canPlay', () => {
         expect(ReactPlayer.canPlay(test.url)).to.be.true
