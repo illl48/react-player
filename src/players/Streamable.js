@@ -23,7 +23,10 @@ export default class Streamable extends Base {
     this.loadingSDK = true
     getSDK(SDK_URL, SDK_GLOBAL).then(playerjs => {
       this.player = new playerjs.Player(this.iframe)
-      this.player.on('ready', this.onReady)
+      this.player.on('ready', () => {
+        this.pollDuration()
+        this.onReady()
+      })
       this.player.on('play', this.onPlay)
       this.player.on('pause', this.props.onPause)
       this.player.on('seeked', this.props.onSeek)
@@ -39,6 +42,15 @@ export default class Streamable extends Base {
         }
       })
     }, this.props.onError)
+  }
+  pollDuration = () => {
+    this.player.getDuration(seconds => {
+      if (seconds) {
+        this.duration = seconds
+      } else {
+        setTimeout(this.pollDuration, 100)
+      }
+    })
   }
   play () {
     this.callPlayer('play')
