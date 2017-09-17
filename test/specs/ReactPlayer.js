@@ -135,11 +135,7 @@ describe('ReactPlayer', () => {
             url={test.url}
             playing
             onPause={onPause}
-            onProgress={p => {
-              if (p.playedSeconds >= 3) {
-                pausePlayer()
-              }
-            }}
+            onPlay={() => setTimeout(pausePlayer, 1000)}
           />,
         div)
       })
@@ -159,16 +155,13 @@ describe('ReactPlayer', () => {
       if (test.seek) {
         it('seekTo, onSeek', done => {
           let player
+          const seekPlayer = () => player.seekTo(10)
           render(
             <ReactPlayer
               ref={p => { player = p || player }}
               url={test.url}
               playing
-              onProgress={p => {
-                if (p.playedSeconds >= 3) {
-                  player.seekTo(10)
-                }
-              }}
+              onPlay={() => setTimeout(seekPlayer, 1000)}
               onSeek={() => done()}
             />,
           div)
