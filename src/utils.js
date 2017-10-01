@@ -66,7 +66,7 @@ export function getSDK (url, sdkGlobal, sdkReady = null, isLoaded = () => true) 
 
 export function getConfig (props, defaultProps, showWarning) {
   let config = merge(defaultProps.config, props.config)
-  for (let p of DEPRECATED_CONFIG_PROPS) {
+  DEPRECATED_CONFIG_PROPS.forEach(p => {
     if (props[p]) {
       const key = p.replace(/Config$/, '')
       config = merge(config, { [key]: props[p] })
@@ -76,7 +76,7 @@ export function getConfig (props, defaultProps, showWarning) {
         console.warn(message, 'font-weight: bold', '')
       }
     }
-  }
+  })
   return config
 }
 
@@ -84,10 +84,10 @@ export function omit (object, ...arrays) {
   const omitKeys = [].concat(...arrays)
   const output = {}
   const keys = Object.keys(object)
-  for (let key of keys) {
+  keys.forEach(key => {
     if (omitKeys.indexOf(key) === -1) {
       output[key] = object[key]
     }
-  }
+  })
   return output
 }

@@ -16,9 +16,10 @@ import Twitch from './players/Twitch'
 const SUPPORTED_PROPS = Object.keys(propTypes)
 const SUPPORTED_PLAYERS = [
   YouTube,
-  SoundCloud,
-  Vimeo,
   Facebook,
+  FilePlayer,
+  Vimeo,
+  SoundCloud,
   Streamable,
   Vidme,
   Wistia,
@@ -30,15 +31,7 @@ export default class ReactPlayer extends Component {
   static displayName = 'ReactPlayer'
   static propTypes = propTypes
   static defaultProps = defaultProps
-  static canPlay = url => {
-    const players = [...SUPPORTED_PLAYERS, FilePlayer]
-    for (let Player of players) {
-      if (Player.canPlay(url)) {
-        return true
-      }
-    }
-    return false
-  }
+  static canPlay = url => SUPPORTED_PLAYERS.some(Player => Player.canPlay(url))
   config = getConfig(this.props, defaultProps, true)
   componentDidMount () {
     this.progress()
@@ -100,7 +93,8 @@ export default class ReactPlayer extends Component {
   }
   renderActivePlayer (url) {
     if (!url) return null
-    for (let Player of SUPPORTED_PLAYERS) {
+    for (let i = 0; i !== SUPPORTED_PLAYERS.length; i++) {
+      const Player = SUPPORTED_PLAYERS[i]
       if (Player.canPlay(url)) {
         return this.renderPlayer(Player)
       }
