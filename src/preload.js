@@ -40,7 +40,7 @@ export default function renderPreloadPlayers (url, config) {
           activePlayer={player.Player}
           url={player.url}
           playing
-          style={{ display: 'none' }}
+          // style={{ display: 'none' }}
         />
       )
     }

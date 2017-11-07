@@ -19,7 +19,7 @@ const MULTIPLE_SOURCES = [
 
 export default class App extends Component {
   state = {
-    url: null,
+    url: 'https://www.youtube.com/watch?v=oUFJJNQGwhk',
     playing: true,
     volume: 0.8,
     muted: false,
@@ -127,9 +127,9 @@ export default class App extends Component {
               playbackRate={playbackRate}
               volume={volume}
               muted={muted}
-              soundcloudConfig={soundcloudConfig}
-              vimeoConfig={vimeoConfig}
-              youtubeConfig={youtubeConfig}
+              soundcloudConfig={{preload: true}}
+              vimeoConfig={{ preload: true }}
+              youtubeConfig={{ preload: true }}
               fileConfig={fileConfig}
               onReady={() => console.log('onReady')}
               onStart={() => console.log('onStart')}
