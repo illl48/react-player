@@ -10,6 +10,9 @@ const HLS_GLOBAL = 'Hls'
 const DASH_EXTENSIONS = /\.(mpd)($|\?)/i
 const DASH_SDK_URL = 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/2.5.0/dash.all.min.js'
 const DASH_GLOBAL = 'dashjs'
+const FLV_EXTENSIONS = /\.(flv)($|\?)/i
+const FLV_SDK_URL = 'https://cdnjs.cloudflare.com/ajax/libs/flv.js/1.3.3/flv.min.js'
+const FLV_GLOBAL = 'flvjs'
 
 function canPlay (url) {
   if (url instanceof Array) {
@@ -27,7 +30,8 @@ function canPlay (url) {
     AUDIO_EXTENSIONS.test(url) ||
     VIDEO_EXTENSIONS.test(url) ||
     HLS_EXTENSIONS.test(url) ||
-    DASH_EXTENSIONS.test(url)
+    DASH_EXTENSIONS.test(url) ||
+    FLV_EXTENSIONS.test(url)
   )
 }
 
@@ -85,6 +89,9 @@ export default class FilePlayer extends Component {
   shouldUseDASH (url) {
     return DASH_EXTENSIONS.test(url) || this.props.config.file.forceDASH
   }
+  shouldUseFLV (url) {
+    return FLV_EXTENSIONS.test(url) || this.props.config.file.forceFLV
+  }
   load (url) {
     if (this.shouldUseHLS(url)) {
       getSDK(HLS_SDK_URL, HLS_GLOBAL).then(Hls => {
@@ -98,6 +105,15 @@ export default class FilePlayer extends Component {
         this.dash = dashjs.MediaPlayer().create()
         this.dash.initialize(this.player, url, this.props.playing)
         this.dash.getDebug().setLogToBrowserConsole(false)
+      })
+    }
+    if (this.shouldUseFLV(url)) {
+      getSDK(FLV_SDK_URL, FLV_GLOBAL).then(flvjs => {
+        if (!flvjs.isSupported()) return
+        const { mediaDataSource, config } = this.props.config.file.flvjs
+        this.flv = flvjs.createPlayer({ url, ...mediaDataSource }, config)
+        this.flv.attachMediaElement(this.player)
+        this.flv.load()
       })
     }
   }
@@ -156,8 +172,9 @@ export default class FilePlayer extends Component {
     const useAudio = this.shouldUseAudio(this.props)
     const useHLS = this.shouldUseHLS(url)
     const useDASH = this.shouldUseDASH(url)
+    const useFlv = this.shouldUseFLV(url)
     const Element = useAudio ? 'audio' : 'video'
-    const src = url instanceof Array || useHLS || useDASH ? undefined : url
+    const src = url instanceof Array || useHLS || useDASH || useFlv ? undefined : url
     const style = {
       width: !width || width === 'auto' ? width : '100%',
       height: !height || height === 'auto' ? height : '100%'

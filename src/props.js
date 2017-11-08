@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types'
 
-const { string, bool, number, array, oneOfType, shape, object, func } = PropTypes
+const { string, bool, number, array, oneOf, oneOfType, shape, object, func } = PropTypes
 
 export const propTypes = {
   url: oneOfType([ string, array ]),
@@ -40,9 +40,28 @@ export const propTypes = {
     file: shape({
       attributes: object,
       tracks: array,
+      flvjs: {
+        mediaDataSource: {
+          type: oneOf(['flv', 'mp4']).isRequired,
+          isLive: bool,
+          cors: bool,
+          withCredentials: bool,
+          hasAudio: bool,
+          hasVideo: bool,
+          duration: bool,
+          filesize: number,
+          segments: shape({
+            duration: number.isRequired,
+            filesize: number,
+            url: string.isRequired
+          })
+        },
+        config: object
+      },
       forceAudio: bool,
       forceHLS: bool,
-      forceDASH: bool
+      forceDASH: bool,
+      forceFLV: bool
     }),
     wistia: shape({
       options: object
@@ -120,9 +139,16 @@ export const defaultProps = {
     file: {
       attributes: {},
       tracks: [],
+      flvjs: {
+        mediaDataSource: {
+          type: 'flv'
+        },
+        config: {}
+      },
       forceAudio: false,
       forceHLS: false,
-      forceDASH: false
+      forceDASH: false,
+      forceFLV: false
     },
     wistia: {
       options: {}
