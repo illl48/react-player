@@ -54,6 +54,10 @@ export default class FilePlayer extends Component {
   }
   componentWillUnmount () {
     this.removeListeners()
+    if (this.flvPlayer) {
+      this.flvPlayer.unload()
+      this.flvPlayer.detachMediaElement()
+    }
   }
   addListeners () {
     const { onReady, onPlay, onPause, onEnded, onError, playsinline } = this.props
