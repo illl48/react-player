@@ -11,48 +11,58 @@ const TEST_URLS = [
   {
     name: 'YouTube',
     url: 'https://www.youtube.com/watch?v=M7lc1UVf-VE',
+    switchTo: 'https://www.youtube.com/watch?v=oUFJJNQGwhk',
     error: 'https://www.youtube.com/watch?v=xxxxxxxxxxx'
   },
   {
     name: 'SoundCloud',
     url: 'https://soundcloud.com/miami-nights-1984/accelerated',
+    switchTo: 'https://soundcloud.com/tycho/tycho-awake',
     error: 'https://soundcloud.com/xxxxxxxxxxx/xxxxxxxxxxx'
   },
   {
     name: 'Facebook',
-    url: 'https://www.facebook.com/facebook/videos/10153231379946729/'
+    url: 'https://www.facebook.com/facebook/videos/10153231379946729/',
+    switchTo: 'https://www.facebook.com/FacebookDevelopers/videos/10152454700553553/'
   },
   {
     name: 'Vimeo',
     url: 'https://vimeo.com/90509568',
+    switchTo: 'https://vimeo.com/169599296',
     error: 'http://vimeo.com/00000000',
     seek: true
   },
   {
     name: 'Twitch',
-    url: 'https://www.twitch.tv/videos/106400740'
+    url: 'https://www.twitch.tv/videos/106400740',
+    switchTo: 'https://www.twitch.tv/videos/175705374'
   },
   {
     name: 'Streamable',
-    url: 'https://streamable.com/moo'
+    url: 'https://streamable.com/moo',
+    switchTo: 'https://streamable.com/ifjh'
   },
   {
     name: 'Vidme',
-    url: 'https://vid.me/yvi'
+    url: 'https://vid.me/yvi',
+    switchTo: 'https://vid.me/GGho'
   },
   {
     name: 'Wistia',
     url: 'https://home.wistia.com/medias/e4a27b971d',
+    switchTo: 'https://home.wistia.com/medias/29b0fbf547',
     seek: true
   },
   {
     name: 'DailyMotion',
     url: 'http://www.dailymotion.com/video/x2buxsr',
+    switchTo: 'http://www.dailymotion.com/video/x26ezj5',
     seek: true
   },
   {
     name: 'FilePlayer',
     url: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv',
+    switchTo: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
     error: 'http://example.com/error.ogv',
     seek: true
   },
@@ -144,6 +154,29 @@ describe('ReactPlayer', () => {
         div)
       })
 
+      if (test.switchTo) {
+        it('switches URL', done => {
+          const switchPlayer = () => {
+            render(
+              <ReactPlayer
+                url={test.switchTo}
+                playing
+                onPlay={() => done()}
+              />,
+            div)
+          }
+          render(
+            <ReactPlayer
+              url={test.url}
+              playing
+              onProgress={p => {
+                if (p.playedSeconds >= 3) switchPlayer()
+              }}
+            />,
+          div)
+        })
+      }
+
       if (test.error) {
         it('onError', done => {
           render(
@@ -167,6 +200,23 @@ describe('ReactPlayer', () => {
               onProgress={p => {
                 if (p.playedSeconds >= 3) {
                   player.seekTo(10)
+                }
+              }}
+              onSeek={() => done()}
+            />,
+          div)
+        })
+
+        it('seekTo fraction', done => {
+          let player
+          render(
+            <ReactPlayer
+              ref={p => { player = p || player }}
+              url={test.url}
+              playing
+              onProgress={p => {
+                if (p.playedSeconds >= 3) {
+                  player.seekTo(0.5)
                 }
               }}
               onSeek={() => done()}
@@ -199,24 +249,31 @@ describe('ReactPlayer', () => {
     })
   }
 
-  describe('switching players', () => {
-    it('switches players', done => {
-      const switchPlayer = () => {
+  describe('playbackRate change', () => {
+    it('updates correctly', () => {
+      let player
+      const updatePlayer = () => {
         render(
           <ReactPlayer
-            url='https://soundcloud.com/miami-nights-1984/accelerated'
-            playing
-            onPlay={() => done()}
+            url='http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
+            playbackRate={0.5}
+            onProgress={() => {
+              const p = player.getInternalPlayer()
+              if (p && p.playbackRate === 0.5) {
+                updatePlayer()
+              }
+            }}
           />,
         div)
       }
       render(
         <ReactPlayer
-          url='https://www.youtube.com/watch?v=M7lc1UVf-VE'
-          playing
-          onProgress={p => {
-            if (p.playedSeconds >= 3) {
-              switchPlayer()
+          ref={p => { player = p }}
+          url='http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
+          onProgress={() => {
+            const p = player.getInternalPlayer()
+            if (p && p.playbackRate === 1) {
+              updatePlayer()
             }
           }}
         />,

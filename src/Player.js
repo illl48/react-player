@@ -23,27 +23,11 @@ export default class Player extends Component {
     }
     this.mounted = false
   }
-  componentDidUpdate (prevProps) {
-    const { activePlayer, url } = this.props
-    if (prevProps.activePlayer !== activePlayer) {
-      this.isReady = false
-      this.seekOnPlay = null
-      this.startOnPlay = true
-      this.player.load(url, this.isReady)
-    }
-  }
   componentWillReceiveProps (nextProps) {
     // Invoke player methods based on incoming props
-    const { activePlayer, url, playing, volume, muted, playbackRate } = this.props
-    if (activePlayer !== nextProps.activePlayer) {
-      this.player.stop()
-      return // A new player is coming, so don't invoke any other methods
-    }
+    const { url, playing, volume, muted, playbackRate } = this.props
     if (url !== nextProps.url) {
       this.player.load(nextProps.url, this.isReady)
-    }
-    if (url && !nextProps.url) {
-      this.player.stop()
     }
     if (!playing && nextProps.playing && !this.isPlaying) {
       this.player.play()
@@ -61,6 +45,10 @@ export default class Player extends Component {
       this.player.setPlaybackRate(nextProps.playbackRate)
     }
   }
+  getDuration () {
+    if (!this.isReady) return null
+    return this.player.getDuration()
+  }
   getCurrentTime () {
     if (!this.isReady) return null
     return this.player.getCurrentTime()
@@ -69,9 +57,9 @@ export default class Player extends Component {
     if (!this.isReady) return null
     return this.player.getSecondsLoaded()
   }
-  getDuration () {
-    if (!this.isReady) return null
-    return this.player.getDuration()
+  getInternalPlayer = (key) => {
+    if (!this.player) return null
+    return this.player[key]
   }
   seekTo (amount) {
     // When seeking before player is ready, store value and seek later
