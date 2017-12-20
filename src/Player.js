@@ -83,7 +83,10 @@ export default class Player extends Component {
     this.player.seekTo(amount)
   }
   onReady = () => {
-    if (!this.mounted) return
+    if (!this.mounted) {
+      setTimeout(this.onReady, 500);
+      return;
+    }
     const { onReady, playing } = this.props
     this.isReady = true
     this.loadingSDK = false

@@ -61,6 +61,8 @@ export default class FilePlayer extends Component {
   }
   addListeners () {
     const { onReady, onPlay, onPause, onEnded, onError, playsinline } = this.props
+    // https://stackoverflow.com/questions/10235919/the-canplay-canplaythrough-events-for-an-html5-video-are-not-called-on-firefox
+    if (this.player.readyState > 3) onReady()
     this.player.addEventListener('canplay', onReady)
     this.player.addEventListener('play', onPlay)
     this.player.addEventListener('pause', onPause)
