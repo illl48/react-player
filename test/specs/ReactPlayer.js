@@ -30,7 +30,7 @@ const TEST_URLS = [
     url: 'https://vimeo.com/90509568',
     switchTo: 'https://vimeo.com/169599296',
     error: 'http://vimeo.com/00000000',
-    seek: true
+    onSeek: true
   },
   {
     name: 'Twitch',
@@ -43,31 +43,34 @@ const TEST_URLS = [
     switchTo: 'https://streamable.com/ifjh'
   },
   {
-    name: 'Vidme',
-    url: 'https://vid.me/yvi',
-    switchTo: 'https://vid.me/GGho'
-  },
-  {
     name: 'Wistia',
     url: 'https://home.wistia.com/medias/e4a27b971d',
     switchTo: 'https://home.wistia.com/medias/29b0fbf547',
-    seek: true
+    onSeek: true
   },
   {
     name: 'DailyMotion',
-    url: 'http://www.dailymotion.com/video/x2buxsr',
-    switchTo: 'http://www.dailymotion.com/video/x26ezj5',
-    seek: true
+    url: 'https://www.dailymotion.com/video/x5e9eog',
+    switchTo: 'https://www.dailymotion.com/video/x61xx3z',
+    onSeek: true
   },
   {
     name: 'FilePlayer',
     url: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv',
-    switchTo: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
+    switchTo: 'http://www.sample-videos.com/audio/mp3/crowd-cheering.mp3',
     error: 'http://example.com/error.ogv',
-    seek: true
+    onSeek: true
   },
   {
-    name: 'FilePlayer (multiple sources)',
+    name: 'FilePlayer (multiple string sources)',
+    url: [
+      'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
+      'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv',
+      'http://clips.vorwaerts-gmbh.de/big_buck_bunny.webm'
+    ]
+  },
+  {
+    name: 'FilePlayer (multiple object sources)',
     url: [
       { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', type: 'video/mp4' },
       { src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.ogv', type: 'video/ogv' },
@@ -85,7 +88,40 @@ const TEST_URLS = [
 ]
 
 describe('ReactPlayer', () => {
-  let div
+  let div // Top level div to render into
+  let player // Top level player var that will always contain the latest player instance
+
+  // Test util for rendering a player
+  function renderPlayer (props, onMount) {
+    const ref = p => {
+      if (p) {
+        player = p
+        if (onMount) {
+          onMount()
+        }
+      }
+    }
+    // Note that playing is set to true by default
+    render(<ReactPlayer ref={ref} playing {...props} />, div)
+  }
+
+  // Test util for rendering a player and then changing props after a short time
+  function renderPlayerChange (props, changeProps, onChange) {
+    renderPlayer({
+      ...props,
+      onProgress: p => {
+        if (changeProps && p.playedSeconds > 3) {
+          renderPlayer({ ...props, ...changeProps })
+          if (onChange) {
+            onChange()
+          }
+        }
+        if (props.onProgress) {
+          props.onProgress(p)
+        }
+      }
+    })
+  }
 
   beforeEach(() => {
     div = document.createElement('div')
@@ -98,10 +134,11 @@ describe('ReactPlayer', () => {
   })
 
   for (let test of TEST_URLS) {
-    const desc = test.skip ? describe.skip : describe
+    const desc = test.skip ? describe.skip : (test.only ? describe.only : describe)
     desc(test.name, () => {
       it('canPlay', () => {
         expect(ReactPlayer.canPlay(test.url)).to.be.true
+        expect(ReactPlayer.canPlay('random-string')).to.be.false
       })
 
       it('onReady, onStart, onPlay, onDuration, onProgress', done => {
@@ -114,183 +151,152 @@ describe('ReactPlayer', () => {
             done()
           }
         }
-        let player
-        render(
-          <ReactPlayer
-            ref={p => { player = p || player }}
-            url={test.url}
-            playing
-            onReady={() => bump('onReady')}
-            onStart={() => bump('onStart')}
-            onPlay={() => bump('onPlay')}
-            onDuration={secs => bump('onDuration')}
-            onProgress={progress => bump('onProgress')}
-          />,
-        div)
+        renderPlayer({
+          url: test.url,
+          onReady: () => bump('onReady'),
+          onStart: () => bump('onStart'),
+          onPlay: () => bump('onPlay'),
+          onDuration: secs => bump('onDuration'),
+          onProgress: progress => bump('onProgress')
+        })
       })
 
       it('onPause', done => {
-        const onPause = () => done()
-        const pausePlayer = () => {
-          render(
-            <ReactPlayer
-              url={test.url}
-              playing={false}
-              onPause={onPause}
-            />,
-          div)
+        const props = {
+          url: test.url,
+          onPause: () => done(),
+          playing: true
         }
-        render(
-          <ReactPlayer
-            url={test.url}
-            playing
-            onPause={onPause}
-            onProgress={p => {
-              if (p.playedSeconds >= 3) {
-                pausePlayer()
-              }
-            }}
-          />,
-        div)
+        renderPlayerChange(props, { playing: false })
+      })
+
+      it('should not play if playing is false', done => {
+        renderPlayer({
+          url: test.url,
+          playing: false,
+          onReady: () => setTimeout(done, 1000),
+          onPlay: () => done('should not play if playing is false')
+        })
+      })
+
+      it('plays after a delay', done => {
+        const playPlayer = () => {
+          renderPlayer({
+            url: test.url,
+            playing: true,
+            onPlay: () => done()
+          })
+        }
+        renderPlayer({
+          url: test.url,
+          playing: false,
+          onReady: () => setTimeout(playPlayer, 1000)
+        })
+      })
+
+      it('volume change does not error', done => {
+        renderPlayerChange(
+          { url: test.url, volume: 1 },
+          { volume: 0.5 },
+          () => setTimeout(done, 1000)
+        )
+      })
+
+      it('muted change does not error', done => {
+        renderPlayerChange(
+          { url: test.url, muted: false },
+          { muted: true },
+          () => setTimeout(done, 1000)
+        )
+      })
+
+      it('playbackRate change does not error', done => {
+        renderPlayerChange(
+          { url: test.url, playbackRate: 1 },
+          { playbackRate: 0.5 },
+          () => setTimeout(done, 1000)
+        )
+      })
+
+      it('renders twice without error', done => {
+        const go = () => renderPlayer({ url: test.url })
+        go()
+        setTimeout(go, 1000)
+        setTimeout(done, 2000)
       })
 
       if (test.switchTo) {
         it('switches URL', done => {
-          const switchPlayer = () => {
-            render(
-              <ReactPlayer
-                url={test.switchTo}
-                playing
-                onPlay={() => done()}
-              />,
-            div)
-          }
-          render(
-            <ReactPlayer
-              url={test.url}
-              playing
-              onProgress={p => {
-                if (p.playedSeconds >= 3) switchPlayer()
-              }}
-            />,
-          div)
+          renderPlayerChange(
+            { url: test.url },
+            { url: test.switchTo, onPlay: () => done() }
+          )
         })
       }
 
       if (test.error) {
         it('onError', done => {
-          render(
-            <ReactPlayer
-              url={test.error}
-              playing
-              onError={() => done()}
-            />,
-          div)
+          renderPlayer({ url: test.error, onError: () => done() })
         })
       }
 
-      if (test.seek) {
-        it('seekTo, onSeek', done => {
-          let player
-          render(
-            <ReactPlayer
-              ref={p => { player = p || player }}
-              url={test.url}
-              playing
-              onProgress={p => {
-                if (p.playedSeconds >= 3) {
-                  player.seekTo(10)
-                }
-              }}
-              onSeek={() => done()}
-            />,
-          div)
+      it('seekTo, onEnded', done => {
+        let duration
+        let seeked = false
+        renderPlayer({
+          url: test.url,
+          onDuration: d => { duration = d },
+          onProgress: p => {
+            if (!seeked && duration && p.playedSeconds > 1) {
+              player.seekTo(duration - 1)
+              seeked = true
+            }
+          },
+          onEnded: () => done()
+        })
+      })
+
+      if (test.onSeek) {
+        it('onSeek', done => {
+          renderPlayer({
+            url: test.url,
+            onProgress: p => {
+              if (p.playedSeconds >= 1) {
+                player.seekTo(10)
+              }
+            },
+            onSeek: () => done()
+          })
         })
 
         it('seekTo fraction', done => {
-          let player
-          render(
-            <ReactPlayer
-              ref={p => { player = p || player }}
-              url={test.url}
-              playing
-              onProgress={p => {
-                if (p.playedSeconds >= 3) {
-                  player.seekTo(0.5)
-                }
-              }}
-              onSeek={() => done()}
-            />,
-          div)
-        })
-      }
-
-      if (test.name === 'Vidme') {
-        it('plays a specific format', done => {
-          render(
-            <ReactPlayer
-              url='https://vid.me/GGho'
-              config={{ vidme: { format: '240p' } }}
-              onReady={() => done()}
-            />,
-          div)
+          renderPlayer({
+            url: test.url,
+            onProgress: p => {
+              if (p.playedSeconds >= 1) {
+                player.seekTo(0.5)
+              }
+            },
+            onSeek: () => done()
+          })
         })
 
-        it('ignores an unknown format', done => {
-          render(
-            <ReactPlayer
-              url='https://vid.me/GGho'
-              config={{ vidme: { format: 'test-unknown-format' } }}
-              onReady={() => done()}
-            />,
-          div)
+        it('seekOnPlay', done => {
+          renderPlayer({
+            url: test.url,
+            onSeek: () => done()
+          }, () => player.seekTo(3))
         })
       }
     })
   }
 
-  describe('playbackRate change', () => {
-    it('updates correctly', () => {
-      let player
-      const updatePlayer = () => {
-        render(
-          <ReactPlayer
-            url='http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
-            playbackRate={0.5}
-            onProgress={() => {
-              const p = player.getInternalPlayer()
-              if (p && p.playbackRate === 0.5) {
-                updatePlayer()
-              }
-            }}
-          />,
-        div)
-      }
-      render(
-        <ReactPlayer
-          ref={p => { player = p }}
-          url='http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
-          onProgress={() => {
-            const p = player.getInternalPlayer()
-            if (p && p.playbackRate === 1) {
-              updatePlayer()
-            }
-          }}
-        />,
-      div)
-    })
-  })
-
   describe('instance methods', () => {
-    let player
     beforeEach(done => {
-      render(
-        <ReactPlayer
-          ref={p => { player = p || player }}
-          url='http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
-          onReady={() => done()}
-        />,
-      div)
+      renderPlayer({
+        url: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4',
+        onReady: () => done()
+      })
     })
 
     it('returns correctly', () => {
@@ -300,25 +306,28 @@ describe('ReactPlayer', () => {
     })
   })
 
-  describe('preloading', () => {
-    let player
+  describe('fall back to FilePlayer', () => {
     beforeEach(done => {
-      render(
-        <ReactPlayer
-          ref={p => {
-            if (p) {
-              player = p
-              done()
-            }
-          }}
-          url={null}
-          config={{
-            youtube: { preload: true },
-            vimeo: { preload: true },
-            dailymotion: { preload: true }
-          }}
-        />,
-      div)
+      renderPlayer({ url: 'http://example.com/random/path' }, () => done())
+    })
+
+    it('falls back to FilePlayer', () => {
+      const video = player.getInternalPlayer()
+      expect(video).to.be.a('HTMLVideoElement')
+      expect(video.src).to.equal('http://example.com/random/path')
+    })
+  })
+
+  describe('preloading', () => {
+    beforeEach(done => {
+      renderPlayer({
+        url: null,
+        config: {
+          youtube: { preload: true },
+          vimeo: { preload: true },
+          dailymotion: { preload: true }
+        }
+      }, () => done())
     })
 
     it('renders with preload config', () => {
@@ -331,8 +340,36 @@ describe('ReactPlayer', () => {
     })
   })
 
+  describe('FilePlayer tracks', () => {
+    beforeEach(done => {
+      renderPlayer({
+        url: 'file.mp4',
+        playsinline: true, // Not required but good for coverage
+        config: { file: {
+          tracks: [
+            { kind: 'subtitles', src: 'subs/subtitles.en.vtt', srcLang: 'en', default: true },
+            { kind: 'subtitles', src: 'subs/subtitles.ja.vtt', srcLang: 'ja' },
+            { kind: 'subtitles', src: 'subs/subtitles.de.vtt', srcLang: 'de' }
+          ]
+        }}
+      }, () => done())
+    })
+
+    it('renders with tracks', () => {
+      expect(player.wrapper).to.be.a('HTMLDivElement')
+      expect(player.wrapper.querySelectorAll('track')).to.have.length(3)
+    })
+  })
+
+  it('does not error when seeking using fraction before ready', () => {
+    renderPlayer({
+      url: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
+    }, () => player.seekTo(0.5))
+  })
+
   it('canPlay returns false', () => {
     expect(ReactPlayer.canPlay('http://example.com')).to.be.false
     expect(ReactPlayer.canPlay('file.txt')).to.be.false
+    expect(ReactPlayer.canPlay([ 'http://example.com', 'file.txt' ])).to.be.false
   })
 })

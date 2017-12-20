@@ -240,13 +240,6 @@ export default class App extends Component {
               </td>
             </tr>
             <tr>
-              <th>Vidme</th>
-              <td>
-                {this.renderLoadButton('https://vid.me/yvi', 'Test A')}
-                {this.renderLoadButton('https://vid.me/GGho', 'Test B')}
-              </td>
-            </tr>
-            <tr>
               <th>Wistia</th>
               <td>
                 {this.renderLoadButton('https://home.wistia.com/medias/e4a27b971d', 'Test A')}
@@ -256,8 +249,8 @@ export default class App extends Component {
             <tr>
               <th>DailyMotion</th>
               <td>
-                {this.renderLoadButton('http://www.dailymotion.com/video/x2buxsr', 'Test A')}
-                {this.renderLoadButton('http://www.dailymotion.com/video/x26ezj5', 'Test B')}
+                {this.renderLoadButton('https://www.dailymotion.com/video/x5e9eog', 'Test A')}
+                {this.renderLoadButton('https://www.dailymotion.com/video/x61xx3z', 'Test B')}
               </td>
             </tr>
             <tr>

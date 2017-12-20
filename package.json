@@ -1,7 +1,7 @@
 {
   "name": "react-player",
-  "version": "1.0.0-beta.6",
-  "description": "A react component for playing a variety of URLs, including file paths, YouTube, Facebook, SoundCloud, Streamable, Vidme, Vimeo and Wistia",
+  "version": "1.0.0-beta.7",
+  "description": "A react component for playing a variety of URLs, including file paths, YouTube, Facebook, SoundCloud, Streamable, Vimeo and Wistia",
   "main": "lib/ReactPlayer.js",
   "typings": "index.d.ts",
   "scripts": {
@@ -45,7 +45,7 @@
     "react": "*"
   },
   "devDependencies": {
-    "auto-changelog": "^1.1.0",
+    "auto-changelog": "^1.2.2",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.16.0",
     "babel-eslint": "^8.0.0",
