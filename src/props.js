@@ -37,9 +37,9 @@ export const propTypes = {
     file: shape({
       attributes: object,
       tracks: array,
-      flvjs: {
-        mediaDataSource: {
-          type: oneOf(['flv', 'mp4']).isRequired,
+      flvjs: shape({
+        mediaDataSource: shape({
+          type: oneOf(['flv', 'mp4']),
           isLive: bool,
           cors: bool,
           withCredentials: bool,
@@ -48,13 +48,13 @@ export const propTypes = {
           duration: bool,
           filesize: number,
           segments: shape({
-            duration: number.isRequired,
+            duration: number,
             filesize: number,
-            url: string.isRequired
+            url: string
           })
-        },
+        }),
         config: object
-      },
+      }),
       forceAudio: bool,
       forceHLS: bool,
       forceDASH: bool,
