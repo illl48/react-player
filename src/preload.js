@@ -1,10 +1,10 @@
 import React from 'react'
 
 import Player from './Player'
-import YouTube from './players/YouTube'
-import SoundCloud from './players/SoundCloud'
-import Vimeo from './players/Vimeo'
-import DailyMotion from './players/DailyMotion'
+import { YouTube } from './players/YouTube'
+import { SoundCloud } from './players/SoundCloud'
+import { Vimeo } from './players/Vimeo'
+import { DailyMotion } from './players/DailyMotion'
 
 const PRELOAD_PLAYERS = [
   {
@@ -20,7 +20,7 @@ const PRELOAD_PLAYERS = [
   {
     Player: Vimeo,
     configKey: 'vimeo',
-    url: 'https://vimeo.com/127250231'
+    url: 'https://vimeo.com/300970506'
   },
   {
     Player: DailyMotion,
@@ -29,18 +29,20 @@ const PRELOAD_PLAYERS = [
   }
 ]
 
-export default function renderPreloadPlayers (url, config) {
+export default function renderPreloadPlayers (url, controls, config) {
   const players = []
 
-  for (let player of PRELOAD_PLAYERS) {
+  for (const player of PRELOAD_PLAYERS) {
     if (!player.Player.canPlay(url) && config[player.configKey].preload) {
       players.push(
         <Player
           key={player.Player.displayName}
           activePlayer={player.Player}
           url={player.url}
+          controls={controls}
           playing
-          style={{ display: 'none' }}
+          muted
+          display='none'
         />
       )
     }

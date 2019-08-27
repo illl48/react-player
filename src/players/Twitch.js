@@ -1,14 +1,15 @@
 import React, { Component } from 'react'
 
 import { callPlayer, getSDK, randomString } from '../utils'
+import createSinglePlayer from '../singlePlayer'
 
-const SDK_URL = '//player.twitch.tv/js/embed/v1.js'
+const SDK_URL = 'https://player.twitch.tv/js/embed/v1.js'
 const SDK_GLOBAL = 'Twitch'
-const MATCH_VIDEO_URL = /^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/videos\/(\d+)($|\?)/
-const MATCH_CHANNEL_URL = /^(?:https?:\/\/)?(?:www\.|go\.)?twitch\.tv\/([a-z0-9_]+)($|\?)/
+const MATCH_VIDEO_URL = /(?:www\.|go\.)?twitch\.tv\/videos\/(\d+)($|\?)/
+const MATCH_CHANNEL_URL = /(?:www\.|go\.)?twitch\.tv\/([a-z0-9_]+)($|\?)/
 const PLAYER_ID_PREFIX = 'twitch-player-'
 
-export default class Twitch extends Component {
+export class Twitch extends Component {
   static displayName = 'Twitch'
   static canPlay = url => MATCH_VIDEO_URL.test(url) || MATCH_CHANNEL_URL.test(url)
   static loopOnEnded = true
@@ -16,7 +17,7 @@ export default class Twitch extends Component {
   callPlayer = callPlayer
   playerID = PLAYER_ID_PREFIX + randomString()
   load (url, isReady) {
-    const { playsinline, onError } = this.props
+    const { playsinline, onError, config } = this.props
     const isChannel = MATCH_CHANNEL_URL.test(url)
     const id = isChannel ? url.match(MATCH_CHANNEL_URL)[1] : url.match(MATCH_VIDEO_URL)[1]
     if (isReady) {
@@ -34,39 +35,62 @@ export default class Twitch extends Component {
         height: '100%',
         width: '100%',
         playsinline: playsinline,
-        autoplay: this.props.playing
+        autoplay: this.props.playing,
+        muted: this.props.muted,
+        ...config.twitch.options
       })
-      const { READY, PLAY, PAUSE, ENDED } = Twitch.Player
+      const { READY, PLAYING, PAUSE, ENDED, ONLINE, OFFLINE } = Twitch.Player
       this.player.addEventListener(READY, this.props.onReady)
-      this.player.addEventListener(PLAY, this.props.onPlay)
+      this.player.addEventListener(PLAYING, this.props.onPlay)
       this.player.addEventListener(PAUSE, this.props.onPause)
       this.player.addEventListener(ENDED, this.props.onEnded)
+
+      // Prevent weird isLoading behaviour when streams are offline
+      this.player.addEventListener(ONLINE, this.props.onLoaded)
+      this.player.addEventListener(OFFLINE, this.props.onLoaded)
     }, onError)
   }
+
   play () {
     this.callPlayer('play')
   }
+
   pause () {
     this.callPlayer('pause')
   }
+
   stop () {
     this.callPlayer('pause')
   }
+
   seekTo (seconds) {
     this.callPlayer('seek', seconds)
   }
+
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction)
   }
+
+  mute = () => {
+    this.callPlayer('setMuted', true)
+  }
+
+  unmute = () => {
+    this.callPlayer('setMuted', false)
+  }
+
   getDuration () {
     return this.callPlayer('getDuration')
   }
+
   getCurrentTime () {
     return this.callPlayer('getCurrentTime')
   }
+
   getSecondsLoaded () {
     return null
   }
+
   render () {
     const style = {
       width: '100%',
@@ -77,3 +101,5 @@ export default class Twitch extends Component {
     )
   }
 }
+
+export default createSinglePlayer(Twitch)

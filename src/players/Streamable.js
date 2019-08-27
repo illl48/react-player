@@ -1,12 +1,13 @@
 import React, { Component } from 'react'
 
 import { callPlayer, getSDK } from '../utils'
+import createSinglePlayer from '../singlePlayer'
 
-const SDK_URL = '//cdn.embed.ly/player-0.0.12.min.js'
+const SDK_URL = '//cdn.embed.ly/player-0.1.0.min.js'
 const SDK_GLOBAL = 'playerjs'
-const MATCH_URL = /^https?:\/\/streamable.com\/([a-z0-9]+)$/
+const MATCH_URL = /streamable\.com\/([a-z0-9]+)$/
 
-export default class Streamable extends Component {
+export class Streamable extends Component {
   static displayName = 'Streamable'
   static canPlay = url => MATCH_URL.test(url)
 
@@ -29,40 +30,65 @@ export default class Streamable extends Component {
         this.duration = duration
         this.currentTime = seconds
       })
-      this.player.on('progress', ({ percent }) => {
+      this.player.on('buffered', ({ percent }) => {
         if (this.duration) {
           this.secondsLoaded = this.duration * percent
         }
       })
+      if (this.props.muted) {
+        this.player.mute()
+      }
     }, this.props.onError)
   }
+
   play () {
     this.callPlayer('play')
   }
+
   pause () {
     this.callPlayer('pause')
   }
+
   stop () {
     // Nothing to do
   }
+
   seekTo (seconds) {
     this.callPlayer('setCurrentTime', seconds)
   }
+
   setVolume (fraction) {
     this.callPlayer('setVolume', fraction * 100)
   }
+
+  setLoop (loop) {
+    this.callPlayer('setLoop', loop)
+  }
+
+  mute = () => {
+    this.callPlayer('mute')
+  }
+
+  unmute = () => {
+    this.callPlayer('unmute')
+  }
+
   getDuration () {
     return this.duration
   }
+
   getCurrentTime () {
     return this.currentTime
   }
+
   getSecondsLoaded () {
     return this.secondsLoaded
   }
+
   ref = iframe => {
     this.iframe = iframe
   }
+
   render () {
     const id = this.props.url.match(MATCH_URL)[1]
     const style = {
@@ -81,3 +107,5 @@ export default class Streamable extends Component {
     )
   }
 }
+
+export default createSinglePlayer(Streamable)

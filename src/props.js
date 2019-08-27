@@ -3,24 +3,33 @@ import PropTypes from 'prop-types'
 const { string, bool, number, array, oneOf, oneOfType, shape, object, func } = PropTypes
 
 export const propTypes = {
-  url: oneOfType([ string, array ]),
+  url: oneOfType([string, array, object]),
   playing: bool,
   loop: bool,
   controls: bool,
   volume: number,
   muted: bool,
   playbackRate: number,
-  width: oneOfType([ string, number ]),
-  height: oneOfType([ string, number ]),
+  width: oneOfType([string, number]),
+  height: oneOfType([string, number]),
   style: object,
-  progressFrequency: number,
+  progressInterval: number,
   playsinline: bool,
+  pip: bool,
+  light: oneOfType([bool, string]),
+  wrapper: oneOfType([
+    string,
+    func,
+    shape({ render: func.isRequired })
+  ]),
   config: shape({
     soundcloud: shape({
-      options: object
+      options: object,
+      preload: bool
     }),
     youtube: shape({
       playerVars: object,
+      embedOptions: object,
       preload: bool
     }),
     facebook: shape({
@@ -31,7 +40,7 @@ export const propTypes = {
       preload: bool
     }),
     vimeo: shape({
-      iframeParams: object,
+      playerOptions: object,
       preload: bool
     }),
     file: shape({
@@ -55,12 +64,22 @@ export const propTypes = {
         }),
         config: object
       }),
+      forceFLV: bool,
+      forceVideo: bool,
       forceAudio: bool,
       forceHLS: bool,
       forceDASH: bool,
-      forceFLV: bool
+      hlsOptions: object,
+      hlsVersion: string,
+      dashVersion: string
     }),
     wistia: shape({
+      options: object
+    }),
+    mixcloud: shape({
+      options: object
+    }),
+    twitch: shape({
       options: object
     })
   }),
@@ -69,25 +88,31 @@ export const propTypes = {
   onPlay: func,
   onPause: func,
   onBuffer: func,
+  onBufferEnd: func,
   onEnded: func,
   onError: func,
   onDuration: func,
   onSeek: func,
-  onProgress: func
+  onProgress: func,
+  onEnablePIP: func,
+  onDisablePIP: func
 }
 
 export const defaultProps = {
   playing: false,
   loop: false,
   controls: false,
-  volume: 0.8,
+  volume: null,
   muted: false,
   playbackRate: 1,
-  width: 640,
-  height: 360,
+  width: '640px',
+  height: '360px',
   style: {},
-  progressFrequency: 1000,
+  progressInterval: 1000,
   playsinline: false,
+  pip: false,
+  light: false,
+  wrapper: 'div',
   config: {
     soundcloud: {
       options: {
@@ -102,12 +127,13 @@ export const defaultProps = {
     },
     youtube: {
       playerVars: {
-        autoplay: 0,
         playsinline: 1,
         showinfo: 0,
         rel: 0,
-        iv_load_policy: 3
+        iv_load_policy: 3,
+        modestbranding: 1
       },
+      embedOptions: {},
       preload: false
     },
     facebook: {
@@ -123,7 +149,6 @@ export const defaultProps = {
     vimeo: {
       playerOptions: {
         autopause: false,
-        autoplay: false,
         byline: false,
         portrait: false,
         title: false
@@ -139,12 +164,24 @@ export const defaultProps = {
         },
         config: {}
       },
+      forceFLV: false,
+      forceVideo: false,
       forceAudio: false,
       forceHLS: false,
       forceDASH: false,
-      forceFLV: false
+      hlsOptions: {},
+      hlsVersion: '0.10.1',
+      dashVersion: '2.9.2'
     },
     wistia: {
+      options: {}
+    },
+    mixcloud: {
+      options: {
+        hide_cover: 1
+      }
+    },
+    twitch: {
       options: {}
     }
   },
@@ -153,11 +190,14 @@ export const defaultProps = {
   onPlay: function () {},
   onPause: function () {},
   onBuffer: function () {},
+  onBufferEnd: function () {},
   onEnded: function () {},
   onError: function () {},
   onDuration: function () {},
   onSeek: function () {},
-  onProgress: function () {}
+  onProgress: function () {},
+  onEnablePIP: function () {},
+  onDisablePIP: function () {}
 }
 
 export const DEPRECATED_CONFIG_PROPS = [
